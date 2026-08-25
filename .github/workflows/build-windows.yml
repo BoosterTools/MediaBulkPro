@@ -1,0 +1,61 @@
+name: Windows Build
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+      - name: Run tests
+        env:
+          QT_QPA_PLATFORM: offscreen
+          MEDIABULK_DATA_DIR: ${{ runner.temp }}/mediabulk
+        run: pytest
+      - name: Generate icon
+        run: python scripts/make_icon.py
+      - name: Build executable
+        run: python scripts/build_exe.py
+      - name: Build installer (Inno Setup)
+        shell: pwsh
+        run: |
+          choco install innosetup --no-progress -y
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" scripts\installer.iss
+      - name: Generate checksums
+        shell: pwsh
+        run: |
+          Get-FileHash dist\MediaBulkPro-Windows-x64.exe -Algorithm SHA256 |
+            Select-Object -ExpandProperty Hash | Out-File dist\MediaBulkPro-Windows-x64.exe.sha256
+          Get-FileHash dist\MediaBulkPro-Setup.exe -Algorithm SHA256 |
+            Select-Object -ExpandProperty Hash | Out-File dist\MediaBulkPro-Setup.exe.sha256
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: MediaBulkPro-Windows
+          path: |
+            dist/MediaBulkPro-Windows-x64.exe
+            dist/MediaBulkPro-Setup.exe
+            dist/*.sha256
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/MediaBulkPro-Windows-x64.exe
+            dist/MediaBulkPro-Setup.exe
+            dist/*.sha256
+          generate_release_notes: true
