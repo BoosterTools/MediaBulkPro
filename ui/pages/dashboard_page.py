@@ -196,6 +196,8 @@ class DashboardPage(BasePage):
         self.table.open_file_requested.connect(self._open_file)
         self.table.open_folder_requested.connect(self._open_folder)
         self.table.reordered.connect(self.ctx.queue_manager.reorder)
+        self.table.view_error_requested.connect(self.show_error_detail)
+        self.table.itemDoubleClicked.connect(self._on_row_double_clicked)
         self.layout_.addWidget(self.table, 1)
 
     def _retry_with_detail(self, item_id: int) -> None:
@@ -237,6 +239,17 @@ class DashboardPage(BasePage):
         item = self.ctx.queue_repo.get(item_id)
         if item and item.error_message:
             ErrorDetailDialog(item.error_message, parent=self).exec()
+        elif item:
+            notify(self, "No error details", "This item has no recorded error.")
+
+    def _on_row_double_clicked(self, table_item) -> None:
+        row = table_item.row()
+        item_id = self.table.item_id_for_row(row)
+        if item_id is None:
+            return
+        item = self.ctx.queue_repo.get(item_id)
+        if item and item.status == "failed":
+            self.show_error_detail(item_id)
 
     # -- live events ------------------------------------------------------
     def _on_event(self, event: QueueEvent) -> None:

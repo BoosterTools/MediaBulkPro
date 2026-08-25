@@ -27,6 +27,7 @@ def build_stylesheet(p: Palette) -> str:
     QPushButton#NavButton:hover {{ background: {p.surface_alt}; }}
     QPushButton#NavButton:checked {{ background: {p.accent}; color: {p.accent_text}; font-weight: 600; }}
     QScrollArea#NavScroll, QWidget#NavInner {{ background: transparent; border: none; }}
+    QScrollArea#PageScroll, QWidget#PageContent {{ background: transparent; border: none; }}
 
     QFrame#Card {{ background: {p.surface}; border: 1px solid {p.border}; border-radius: 12px; }}
     QLabel#CardTitle {{ font-size: 9pt; color: {p.text_muted}; font-weight: 600; }}

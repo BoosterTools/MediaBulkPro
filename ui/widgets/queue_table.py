@@ -34,6 +34,7 @@ class QueueTable(QTableWidget):
     copy_url_requested = Signal(int)
     open_file_requested = Signal(int)
     open_folder_requested = Signal(int)
+    view_error_requested = Signal(int)
     reordered = Signal(list)
 
     def __init__(self, parent=None) -> None:
@@ -95,6 +96,8 @@ class QueueTable(QTableWidget):
         menu.addAction("Open File", lambda: self.open_file_requested.emit(item_id))
         menu.addAction("Open Containing Folder", lambda: self.open_folder_requested.emit(item_id))
         menu.addAction("Copy URL", lambda: self.copy_url_requested.emit(item_id))
+        menu.addSeparator()
+        menu.addAction("View Error Details", lambda: self.view_error_requested.emit(item_id))
         menu.addSeparator()
         menu.addAction("Remove", lambda: self.remove_requested.emit(item_id))
         menu.exec(self.viewport().mapToGlobal(pos))
